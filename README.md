@@ -18,7 +18,8 @@ The FixBit watchface is a mostly faithful recreation of the ["Fix" watchface for
 - [ ] Tap to switch between seconds indicator, heartRate, footsteps, and other stats
 - [ ] (Maybe?) Always On Display 
   
-
+### Development:
+- See the [Fitbit CLI Dev guide](https://dev.fitbit.com/build/guides/command-line-interface/) for more information
 
 _Original Description by Kieselleger:_
 > The numbers are traveling and the dial is fixed. Enable hours, minutes and seconds. Change the color of all elements on the screen as you like it or enable 24 hour display. Display can be flipped and rotation can be changed as desired.
