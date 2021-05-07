@@ -18,12 +18,14 @@ let last_min = -1;
 let minutes_group = document.getElementById('minutes_group');
 let hours_group = document.getElementById('hours_group');
 let seconds = document.getElementById("seconds");
+let stats_animation = document.getElementById("stats_animation");
 
 // Define Constants
 const SETTINGS_TYPE = "cbor";
 const SETTINGS_FILE = "settings.cbor";
 const hourRadius = device.screen.width * .70;
 const minuteRadius = device.screen.width * .53;
+const statsRadius = device.screen.width * .48;
 
 //Load and initialize Settings
 function loadSettings() {
@@ -76,6 +78,22 @@ function updateClock(evt) {
   }
 }
 
+var isiton = false;
+function onTap(evt) {
+
+  if (!isiton){
+    stats_animation.animate("enable");
+  }
+  else {
+    stats_animation.animate("disable");
+  }
+
+  isiton = !isiton;
+}
+
+let screen_tap = document.getElementById("screen_tap");
+screen_tap.addEventListener("click", onTap);
+
 function updateSettings(evt) {
   //settings values
   //  string  indicator.color
@@ -88,7 +106,9 @@ function updateSettings(evt) {
   switch (key) {
     case "indicator.color":
       let indicators = document.getElementsByClassName("colored-line");
+      let statsIndicators = document.getElementsByClassName("icon");
       indicators.forEach ( (el) => el.style.fill = val );
+      statsIndicators.forEach ( (el) => el.style.fill = val );
       settings[0].val = val;
       break;
     case "indicator.seconds":

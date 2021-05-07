@@ -3,24 +3,36 @@
     <link rel="stylesheet" href="styles.css" />
   </defs>
 
+  <rect id="screen_tap" x="0" y="0" width="100%" height="100%" pointer-events="visible" /> 
   <line class="colored-line" x1="0" y1="50%-1" x2="15%" y2="50%-1" stroke-width="2" />
   <line class="colored-line" x1="70%" y1="50%-1" x2="100%" y2="50%-1" stroke-width="2" />
   <rect class="colored-line seconds-prop" x="80%-1" y="50%-15" width="36" height="29" />
   <rect class="seconds-prop" x="80%" y="50%-14" width="34" height="27" fill="black"/>
-
-  <g id="heartrate_group" trasnform="translate(50%,50% + 35)">
-    <line class="colored-line" x1="70%" y1="50%-1" x2="100%" y2="50%-1" stroke-width="2" />
-  </g>
-  <g id="steps_group" trasnform="translate(50%,50% - 85)">
-    <line class="colored-line" x1="70%" y1="50%-1" x2="100%" y2="50%-1" stroke-width="2" />
-  </g>
+  
+  <symbol id="stats_group">
+    <g id="steps_group" transform="translate(120%, 50% - 35),rotate(90)">
+      <arc class="colored-line" x="-40%" y="-40%" width="80%" height="80%" start-angle="270" sweep-angle="90" arc-width="2" />
+      <text id="steps_text" class="metric" x="-72% + 12" y="-12">4213</text>
+      <image class="icon" href="images/steps_open.png" x="-72% -12" y="-12" />
+      <animateTransform attributeType="rotate" from="0" to="90" begin="disable" dur="0.8" easing="ease-in"/>
+      <animateTransform attributeType="rotate" from="90" to="0" begin="enable" dur="0.8" easing="ease-out"/>
+    </g>
+    <g id="heartrate_group" transform="translate(120%, 50% + 35),rotate(-90)">
+      <arc class="colored-line" x="-40%" y="-40%"  width="80%" height="80%" start-angle="180" sweep-angle="90" arc-width="2" />
+      <text id="heartrate_text" class="metric" x="-72% + 12" y="12">130</text>
+      <image class="icon" href="images/heart_open.png" x="-72% -12" y="12" />
+      <animateTransform attributeType="rotate" from="0" to="-90" begin="disable" dur="0.8" easing="ease-in"/>
+      <animateTransform attributeType="rotate" from="-90" to="0" begin="enable" dur="0.8" easing="ease-out"/>
+    </g>
+  </symbol>
+  <use id="stats_animation" href="#stats_group" />
 
   <text id="seconds" x="80%+17" y="50%+7" 
         fill="darkgrey" class="second seconds-prop">00</text>
 
   <g id="clock_group" transform="translate(100%,50%+5)">
 
-    <g id="minutes_group" transform="translate(10%,0)">
+    <g id="minutes_group" transform="translate(8%,0)">
       <text class="minutes" x="0" y="0">00</text>
       <text class="minutes" x="0" y="0">05</text>
       <text class="minutes" x="0" y="0">10</text>
