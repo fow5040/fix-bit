@@ -3,6 +3,7 @@ import document from "document";
 import { me as appbit} from "appbit";
 import { me as device } from "device";
 import { HeartRateSensor } from "heart-rate";
+import { display } from "display";
 import { today } from "user-activity";
 import * as messaging from "messaging";
 import * as fs from "fs";
@@ -59,7 +60,8 @@ if (settings.length != 4) {
   ]
 };
 
-
+/* ----------------------------------------- */
+/* -------------- CLOCK LOGIC -------------- */
 let getMinSecX = (val,radius) => radius * Math.cos(Math.PI * val / 30 + .98*Math.PI);
 let getMinSecY = (val,radius) => radius * Math.sin(Math.PI * val / 30 + .98*Math.PI);
 
@@ -92,6 +94,11 @@ function updateClock(evt) {
   }
 }
 
+
+
+/* ----------------------------------------- */
+/* -------------- STEPS LOGIC -------------- */
+
 function activityCallback(evt) {
   updateSteps();
 }
@@ -105,6 +112,45 @@ function updateSteps(){
 
   step_count.text = stepText;
 }
+
+/* ----------------------------------------- */
+/* --------------- HRM LOGIC --------------- */
+
+let hrm;
+
+function maybe_start_hrm(){
+  // if (hrm && body && show_stats && body.present && !hrm.activated){
+  // body.present does not seem to show when the body sensor is active
+  // Defaulting to simply disabling heart rate when screen is off or stats are inactive
+  if (hrm && show_stats){
+    hrm.start();
+  } else {
+    heart_rate.text = "---";
+  }
+}
+
+function maybe_stop_hrm(){
+  if (hrm && hrm.activated){
+    hrm.stop();
+    heart_rate.text = "---";
+  }
+}
+
+if (HeartRateSensor && appbit.permissions.granted("access_heart_rate")) {
+  hrm = new HeartRateSensor();
+  hrm.addEventListener("reading", () => {
+    heart_rate.text = hrm.heartRate;
+  });
+  maybe_start_hrm();
+}
+
+//Start and stop HRM if display is on/off, respectively
+display.addEventListener("change", () => {
+  display.on ? maybe_start_hrm() : maybe_stop_hrm();
+});
+
+/* ----------------------------------------- */
+/* ---------- COMMON STATS LOGIC ----------- */
 
 // Function can be called irrespective of state of stats display
 function maybe_show_stats(){
@@ -122,8 +168,9 @@ function maybe_show_stats(){
   }
 
   //If stats are off screen, trigger animation and disable after active duration
-  updateSteps();
   show_stats = true;
+  updateSteps();
+  maybe_start_hrm();
   stats_animation.animate("enable");
   stats_disable_time = Date.now() + statsActiveDuration - 5;
   setTimeout(maybe_disable_stats, statsActiveDuration);
@@ -154,6 +201,7 @@ function maybe_disable_stats(){
   // Disable animation length = 400ms
   setTimeout( () => {
     stats_leaving = false;
+    maybe_stop_hrm();
   }, 400)
 
 }
