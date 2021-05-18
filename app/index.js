@@ -1,7 +1,9 @@
 import clock from "clock";
 import document from "document";
+import { me as appbit} from "appbit";
 import { me as device } from "device";
 import { HeartRateSensor } from "heart-rate";
+import { today } from "user-activity";
 import * as messaging from "messaging";
 import * as fs from "fs";
 
@@ -90,6 +92,20 @@ function updateClock(evt) {
   }
 }
 
+function activityCallback(evt) {
+  updateSteps();
+}
+
+function updateSteps(){
+  let val = (today.adjusted.steps || 0);
+  let stepText = "----";
+  if (val != 0){
+    stepText = val > 999 ? Math.floor(val/1000) + "," + ("00"+(val%1000)).slice(-3) : val;
+  }
+
+  step_count.text = stepText;
+}
+
 // Function can be called irrespective of state of stats display
 function maybe_show_stats(){
   //If stats are on screen, extend animation life, or do nothing
@@ -106,6 +122,7 @@ function maybe_show_stats(){
   }
 
   //If stats are off screen, trigger animation and disable after active duration
+  updateSteps();
   show_stats = true;
   stats_animation.animate("enable");
   stats_disable_time = Date.now() + statsActiveDuration - 5;
@@ -187,9 +204,13 @@ function updateSettings(evt) {
   maybe_show_stats();
 }
 
-// Update the clock every tick event
+// Update the clock and stats every tick event
 clock.ontick = (evt) => updateClock(evt);
 messaging.peerSocket.onmessage = updateSettings;
+
+if (appbit.permissions.granted("access_activity")) {
+  clock.addEventListener("tick", activityCallback);
+}
 
 //Force an update with all relevant settings
 for (let i = 0; i < 4; i++){
