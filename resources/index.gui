@@ -3,7 +3,6 @@
     <link rel="stylesheet" href="styles.css" />
   </defs>
 
-  <rect id="screen_tap" x="0" y="0" width="100%" height="100%" pointer-events="visible" /> 
   <line class="colored-line" x1="0" y1="50%-1" x2="15%" y2="50%-1" stroke-width="2" />
   <line class="colored-line" x1="70%" y1="50%-1" x2="100%" y2="50%-1" stroke-width="2" />
   <rect class="colored-line seconds-prop" x="80%-1" y="50%-15" width="36" height="29" />
@@ -11,18 +10,18 @@
   
   <symbol id="stats_group">
     <g id="steps_group" transform="translate(120%, 50% - 35),rotate(90)">
-      <arc class="colored-line" x="-40%" y="-40%" width="80%" height="80%" start-angle="270" sweep-angle="90" arc-width="2" />
-      <text id="steps_text" class="metric" x="-72% + 12" y="-12">4213</text>
-      <image class="icon" href="images/steps_open.png" x="-72% -12" y="-12" />
-      <animateTransform attributeType="rotate" from="0" to="90" begin="disable" dur="0.8" easing="ease-in"/>
-      <animateTransform attributeType="rotate" from="90" to="0" begin="enable" dur="0.8" easing="ease-out"/>
+      <arc class="colored-line" x="-35%" y="-35%" width="70%" height="70%" start-angle="280" sweep-angle="80" arc-width="2" />
+      <text id="steps_text" class="metric" x="-35%" y="2">----</text>
+      <image class="icon" href="images/steps_open.png" x="-35% - 24" y="-44" />
+      <animateTransform attributeType="rotate" from="0" to="90" begin="disable" dur="0.4" easing="ease-in"/>
+      <animateTransform attributeType="rotate" from="90" to="0" begin="enable" dur="0.5" easing="ease-out"/>
     </g>
     <g id="heartrate_group" transform="translate(120%, 50% + 35),rotate(-90)">
-      <arc class="colored-line" x="-40%" y="-40%"  width="80%" height="80%" start-angle="180" sweep-angle="90" arc-width="2" />
-      <text id="heartrate_text" class="metric" x="-72% + 12" y="12">130</text>
-      <image class="icon" href="images/heart_open.png" x="-72% -12" y="12" />
-      <animateTransform attributeType="rotate" from="0" to="-90" begin="disable" dur="0.8" easing="ease-in"/>
-      <animateTransform attributeType="rotate" from="-90" to="0" begin="enable" dur="0.8" easing="ease-out"/>
+      <arc class="colored-line" x="-35%" y="-35%"  width="70%" height="70%" start-angle="180" sweep-angle="80" arc-width="2" />
+      <text id="heartrate_text" class="metric" x="-35%" y="12">---</text>
+      <image class="icon" href="images/heart_open.png" x="-35% - 26" y="18" />
+      <animateTransform attributeType="rotate" from="0" to="-90" begin="disable" dur="0.4" easing="ease-in"/>
+      <animateTransform attributeType="rotate" from="-90" to="0" begin="enable" dur="0.5" easing="ease-out"/>
     </g>
   </symbol>
   <use id="stats_animation" href="#stats_group" />
@@ -62,5 +61,7 @@
       <text class="hours" x="0" y="0">11</text>
     </g>
   </g>
+
+  <rect id="screen_tap" x="0" y="0" width="100%" height="100%" opacity="0" pointer-events="visible" /> 
 
 </svg>

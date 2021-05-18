@@ -1,6 +1,7 @@
 import clock from "clock";
 import document from "document";
 import { me as device } from "device";
+import { HeartRateSensor } from "heart-rate";
 import * as messaging from "messaging";
 import * as fs from "fs";
 
@@ -18,6 +19,8 @@ let last_min = -1;
 let minutes_group = document.getElementById('minutes_group');
 let hours_group = document.getElementById('hours_group');
 let seconds = document.getElementById("seconds");
+let heart_rate = document.getElementById("heartrate_text")
+let step_count = document.getElementById("steps_text");
 let stats_animation = document.getElementById("stats_animation");
 
 // Define Constants
@@ -25,7 +28,15 @@ const SETTINGS_TYPE = "cbor";
 const SETTINGS_FILE = "settings.cbor";
 const hourRadius = device.screen.width * .70;
 const minuteRadius = device.screen.width * .53;
-const statsRadius = device.screen.width * .48;
+const statsActiveDuration = 4000; //Time stats remain active without further taps
+
+// Create state variable for showing heartrate & step count
+let show_stats = false;
+// State variable for animation status
+// should only be true if the 'leaving' animation is active
+let stats_leaving = false;
+// Time to check if animation should be disabled
+let stats_disable_time = Date.now();
 
 //Load and initialize Settings
 function loadSettings() {
@@ -37,11 +48,12 @@ function loadSettings() {
 }
 
 let settings = loadSettings();
-if (settings.length != 3) {
+if (settings.length != 4) {
   settings = [
     {key: "indicator.color", val: "red"},
     {key: "indicator.seconds", val: true},
-    {key: "hour.fixed", val: true}
+    {key: "hour.fixed", val: true},
+    {key: "indicator.stats", val: false}
   ]
 };
 
@@ -78,17 +90,59 @@ function updateClock(evt) {
   }
 }
 
-var isiton = false;
+// Function can be called irrespective of state of stats display
+function maybe_show_stats(){
+  //If stats are on screen, extend animation life, or do nothing
+  if (show_stats == true){
+    stats_disable_time = Date.now() + statsActiveDuration - 5;
+    setTimeout(maybe_disable_stats, statsActiveDuration);
+    return;
+  }
+
+  //If stats are leaving, reenable them about 400ms after leaving
+  if (stats_leaving == true){
+    setTimeout(maybe_show_stats, stats_disable_time + 405 - Date.now());
+    return;
+  }
+
+  //If stats are off screen, trigger animation and disable after active duration
+  show_stats = true;
+  stats_animation.animate("enable");
+  stats_disable_time = Date.now() + statsActiveDuration - 5;
+  setTimeout(maybe_disable_stats, statsActiveDuration);
+}
+
+function maybe_disable_stats(){
+  // If always enable flag is true, never disable stat monitor
+  if (settings[3].val == true){
+    return;
+  }
+
+  //Check if stats_disable_time has changed
+  if (Date.now() < stats_disable_time){
+    return;
+  }
+
+  //Check if disable animation is active
+  if (stats_leaving){
+    return;
+  }
+
+  //Set animation flag to active,
+  //    stats to inacrtive,
+  //    and reset animation flag in 400ms
+  stats_leaving = true;
+  show_stats = false;
+  stats_animation.animate("disable");
+  // Disable animation length = 400ms
+  setTimeout( () => {
+    stats_leaving = false;
+  }, 400)
+
+}
+
 function onTap(evt) {
-
-  if (!isiton){
-    stats_animation.animate("enable");
-  }
-  else {
-    stats_animation.animate("disable");
-  }
-
-  isiton = !isiton;
+  maybe_show_stats();
 }
 
 let screen_tap = document.getElementById("screen_tap");
@@ -99,6 +153,7 @@ function updateSettings(evt) {
   //  string  indicator.color
   //  bool    indicator.seconds
   //  bool    hour.fixed
+  //  bool    indicator.stats
 
   let key = evt.data.key;
   let val = evt.data.value;
@@ -119,6 +174,9 @@ function updateSettings(evt) {
     case "hour.fixed":
       settings[2].val = val;
       break;
+    case "indicator.stats":
+      settings[3].val = val;
+      break;
   }
 
   //Write new settings to file system
@@ -126,6 +184,7 @@ function updateSettings(evt) {
 
   //Force UI update
   last_min = -1;
+  maybe_show_stats();
 }
 
 // Update the clock every tick event
@@ -133,7 +192,7 @@ clock.ontick = (evt) => updateClock(evt);
 messaging.peerSocket.onmessage = updateSettings;
 
 //Force an update with all relevant settings
-for (let i = 0; i < 3; i++){
+for (let i = 0; i < 4; i++){
   updateSettings( 
      {
       data : { 
