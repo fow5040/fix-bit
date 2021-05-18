@@ -15,7 +15,7 @@ The FixBit watchface is a mostly faithful recreation of the ["Fix" watchface for
 - [ ] Additional color selection for each component
 - [ ] Ability to flip watchface horizontally and rotate as desired
 - [ ] 24 hour display
-- [ ] Tap to switch between seconds indicator, heartRate, footsteps, and other stats
+- [x] Tap to show heartRate and footsteps
 - [ ] (Maybe?) Always On Display 
   
 ### Development:
