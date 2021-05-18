@@ -1,6 +1,10 @@
 import clock from "clock";
 import document from "document";
+import { me as appbit} from "appbit";
 import { me as device } from "device";
+import { HeartRateSensor } from "heart-rate";
+import { display } from "display";
+import { today } from "user-activity";
 import * as messaging from "messaging";
 import * as fs from "fs";
 
@@ -18,12 +22,24 @@ let last_min = -1;
 let minutes_group = document.getElementById('minutes_group');
 let hours_group = document.getElementById('hours_group');
 let seconds = document.getElementById("seconds");
+let heart_rate = document.getElementById("heartrate_text")
+let step_count = document.getElementById("steps_text");
+let stats_animation = document.getElementById("stats_animation");
 
 // Define Constants
 const SETTINGS_TYPE = "cbor";
 const SETTINGS_FILE = "settings.cbor";
 const hourRadius = device.screen.width * .70;
 const minuteRadius = device.screen.width * .53;
+const statsActiveDuration = 4000; //Time stats remain active without further taps
+
+// Create state variable for showing heartrate & step count
+let show_stats = false;
+// State variable for animation status
+// should only be true if the 'leaving' animation is active
+let stats_leaving = false;
+// Time to check if animation should be disabled
+let stats_disable_time = Date.now();
 
 //Load and initialize Settings
 function loadSettings() {
@@ -35,15 +51,17 @@ function loadSettings() {
 }
 
 let settings = loadSettings();
-if (settings.length != 3) {
+if (settings.length != 4) {
   settings = [
     {key: "indicator.color", val: "red"},
     {key: "indicator.seconds", val: true},
-    {key: "hour.fixed", val: true}
+    {key: "hour.fixed", val: true},
+    {key: "indicator.stats", val: false}
   ]
 };
 
-
+/* ----------------------------------------- */
+/* -------------- CLOCK LOGIC -------------- */
 let getMinSecX = (val,radius) => radius * Math.cos(Math.PI * val / 30 + .98*Math.PI);
 let getMinSecY = (val,radius) => radius * Math.sin(Math.PI * val / 30 + .98*Math.PI);
 
@@ -76,11 +94,131 @@ function updateClock(evt) {
   }
 }
 
+
+
+/* ----------------------------------------- */
+/* -------------- STEPS LOGIC -------------- */
+
+function activityCallback(evt) {
+  updateSteps();
+}
+
+function updateSteps(){
+  let val = (today.adjusted.steps || 0);
+  let stepText = "----";
+  if (val != 0){
+    stepText = val > 999 ? Math.floor(val/1000) + "," + ("00"+(val%1000)).slice(-3) : val;
+  }
+
+  step_count.text = stepText;
+}
+
+/* ----------------------------------------- */
+/* --------------- HRM LOGIC --------------- */
+
+let hrm;
+
+function maybe_start_hrm(){
+  // if (hrm && body && show_stats && body.present && !hrm.activated){
+  // body.present does not seem to show when the body sensor is active
+  // Defaulting to simply disabling heart rate when screen is off or stats are inactive
+  if (hrm && show_stats){
+    hrm.start();
+  } else {
+    heart_rate.text = "---";
+  }
+}
+
+function maybe_stop_hrm(){
+  if (hrm && hrm.activated){
+    hrm.stop();
+    heart_rate.text = "---";
+  }
+}
+
+if (HeartRateSensor && appbit.permissions.granted("access_heart_rate")) {
+  hrm = new HeartRateSensor();
+  hrm.addEventListener("reading", () => {
+    heart_rate.text = hrm.heartRate;
+  });
+  maybe_start_hrm();
+}
+
+//Start and stop HRM if display is on/off, respectively
+display.addEventListener("change", () => {
+  display.on ? maybe_start_hrm() : maybe_stop_hrm();
+});
+
+/* ----------------------------------------- */
+/* ---------- COMMON STATS LOGIC ----------- */
+
+// Function can be called irrespective of state of stats display
+function maybe_show_stats(){
+  //If stats are on screen, extend animation life, or do nothing
+  if (show_stats == true){
+    stats_disable_time = Date.now() + statsActiveDuration - 5;
+    setTimeout(maybe_disable_stats, statsActiveDuration);
+    return;
+  }
+
+  //If stats are leaving, reenable them about 400ms after leaving
+  if (stats_leaving == true){
+    setTimeout(maybe_show_stats, stats_disable_time + 405 - Date.now());
+    return;
+  }
+
+  //If stats are off screen, trigger animation and disable after active duration
+  show_stats = true;
+  updateSteps();
+  maybe_start_hrm();
+  stats_animation.animate("enable");
+  stats_disable_time = Date.now() + statsActiveDuration - 5;
+  setTimeout(maybe_disable_stats, statsActiveDuration);
+}
+
+function maybe_disable_stats(){
+  // If always enable flag is true, never disable stat monitor
+  if (settings[3].val == true){
+    return;
+  }
+
+  //Check if stats_disable_time has changed
+  if (Date.now() < stats_disable_time){
+    return;
+  }
+
+  //Check if disable animation is active
+  if (stats_leaving){
+    return;
+  }
+
+  //Set animation flag to active,
+  //    stats to inacrtive,
+  //    and reset animation flag in 400ms
+  stats_leaving = true;
+  show_stats = false;
+  stats_animation.animate("disable");
+  // Disable animation length = 400ms
+  setTimeout( () => {
+    stats_leaving = false;
+    maybe_stop_hrm();
+  }, 400)
+
+}
+
+function onTap(evt) {
+  maybe_show_stats();
+}
+
+let screen_tap = document.getElementById("screen_tap");
+screen_tap.addEventListener("click", onTap);
+
 function updateSettings(evt) {
   //settings values
   //  string  indicator.color
   //  bool    indicator.seconds
   //  bool    hour.fixed
+  //  bool    indicator.stats
 
   let key = evt.data.key;
   let val = evt.data.value;
@@ -88,7 +226,9 @@ function updateSettings(evt) {
   switch (key) {
     case "indicator.color":
       let indicators = document.getElementsByClassName("colored-line");
+      let statsIndicators = document.getElementsByClassName("icon");
       indicators.forEach ( (el) => el.style.fill = val );
+      statsIndicators.forEach ( (el) => el.style.fill = val );
       settings[0].val = val;
       break;
     case "indicator.seconds":
@@ -99,6 +239,9 @@ function updateSettings(evt) {
     case "hour.fixed":
       settings[2].val = val;
       break;
+    case "indicator.stats":
+      settings[3].val = val;
+      break;
   }
 
   //Write new settings to file system
@@ -106,14 +249,19 @@ function updateSettings(evt) {
 
   //Force UI update
   last_min = -1;
+  maybe_show_stats();
 }
 
-// Update the clock every tick event
+// Update the clock and stats every tick event
 clock.ontick = (evt) => updateClock(evt);
 messaging.peerSocket.onmessage = updateSettings;
 
+if (appbit.permissions.granted("access_activity")) {
+  clock.addEventListener("tick", activityCallback);
+}
+
 //Force an update with all relevant settings
-for (let i = 0; i < 3; i++){
+for (let i = 0; i < 4; i++){
   updateSettings( 
      {
       data : { 

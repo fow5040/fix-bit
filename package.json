@@ -1,11 +1,11 @@
 {
   "name": "fix-bit",
-  "version": "0.9.0",
+  "version": "0.9.5",
   "private": false,
   "license": "UNLICENSED",
   "devDependencies": {
-    "@fitbit/sdk": "^4.1.0",
-    "@fitbit/sdk-cli": "^1.7.1"
+    "@fitbit/sdk": "^4.2.2",
+    "@fitbit/sdk-cli": "^1.7.3"
   },
   "fitbit": {
     "appUUID": "42be7709-bdfe-4074-86f2-49dd5291d544",
@@ -13,14 +13,21 @@
     "appDisplayName": "FixBit",
     "iconFile": "resources/icon.png",
     "wipeColor": "#ffffff",
-    "requestedPermissions": [],
+    "requestedPermissions": [
+      "access_activity",
+      "access_heart_rate"
+    ],
     "buildTargets": [
       "higgs",
       "meson",
       "gemini",
       "mira"
     ],
-    "i18n": {},
+    "i18n": {
+      "en": {
+        "name": "Fix Bit"
+      }
+    },
     "defaultLanguage": "en-US"
   },
   "scripts": {

@@ -39,6 +39,10 @@ function settingsComponent(props) {
           settingsKey="indicator.seconds"
           label="Show seconds indicator?"
           />
+        <Toggle
+          settingsKey="indicator.stats"
+          label="Always show stats?"
+          />
         
 
       </Section>

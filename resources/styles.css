@@ -2,6 +2,12 @@
   fill: red;
 }
 
+.icon {
+  width: 24;
+  height: 24;
+  fill: red;
+}
+
 .defaultText {
   font-size: 32;
   font-family: System-Regular;
@@ -35,6 +41,15 @@
   text-length: 2;
   text-anchor: middle;
   fill: white;
+}
+
+.metric {
+  font-size: 24;
+  font-family: System-Regular;
+  font-weight: regular;
+  text-length: 8;
+  text-anchor: middle;
+  fill: darkgrey;
 }
 
 #background {
